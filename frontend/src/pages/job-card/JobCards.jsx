@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import useAuthStore from "../../useAuthStore";
 import { fetchCurrentUser } from "../../services/UserService";
 import { useFrappeAuth } from "frappe-react-sdk";
+import Navbar from "../../components/Navbar/Navbar";
 
 export const JobCards = () => {
   const [pageLimitStart, setPageLimitStart] = useState(0);
@@ -25,15 +26,23 @@ export const JobCards = () => {
   const user = useAuthStore((state) => state.user);
   // const [loggedEmployee, setLoggedEmployee] = useState()
   const [currentUser, setCurrentUser] = useState()
+  const [currentWorkstation, setCurrentWorkstation] = useState()
+  const [currentOperation, setCurrentOperation] = useState()
   const {logout}=useFrappeAuth()
-
+  let filters = [
+    ["operation", "=", currentOperation?.operations]
+  ];
+  
+  if (currentWorkstation) {
+    filters.push(["workstation", "=", currentWorkstation]);
+  }
 
   // Job Card verilerini al
   const getJobCards = async () => {
-    if (!user?.custom_workstation) return; // Kullanıcı bilgisi yüklü değilse dur
+    if (!user?.custom_operations) return; // Kullanıcı bilgisi yüklü değilse dur
     try {
       const response = await fetch(
-        `http://localhost:8001/api/resource/Job Card?fields=["*"]&filters=[["workstation", "=", "${user.custom_workstation}"]]&limit=20&limit_start=${pageLimitStart}`
+        `http://localhost:8001/api/resource/Job Card?fields=["*"]&filters=${JSON.stringify(filters)}&limit=20&limit_start=${pageLimitStart}`
       ,{
         method: "GET",
         credentials: 'include',
@@ -96,6 +105,8 @@ export const JobCards = () => {
 
       const employeeDetails = await detailsResponse.json();
       setUser(employeeDetails.data);
+      // setCurrentWorkstation(employeeDetails.data.custom_workstations[0].workstation)
+      setCurrentOperation(localStorage.getItem('currentOperation'))
       // setLoggedEmployee(employeeDetails.data);
       setIsUserLoaded(true); // Kullanıcı bilgisi yüklendi
       console.log("Employee Details:", employeeDetails.data); // Employee bilgilerini konsola yazdır
@@ -107,7 +118,6 @@ export const JobCards = () => {
   useEffect(() => {
     getLoggedUserEmployeeDetails();
     fetchCurrentUser().then((currentUsr) => {
-      console.log("Mevcut Kullanıcı:", currentUsr);
       setCurrentUser(currentUsr)
 
   });
@@ -117,7 +127,7 @@ export const JobCards = () => {
     if (isUserLoaded) {
       getJobCards(); // Kullanıcı yüklendiğinde job cards verilerini getir
     }
-  }, [isUserLoaded, pageLimitStart]); // pageLimitStart değişince yeniden yükle
+  }, [isUserLoaded, pageLimitStart,currentWorkstation,currentOperation]); // pageLimitStart değişince yeniden yükle
 
 
   const handleJobCardInput = (e) => {
@@ -133,9 +143,18 @@ export const JobCards = () => {
 
   return (
     <div className="p-2">
-      <h1 className="scroll-m-20 text-2xl font-extrabold tracking-tight lg:text-3xl">
-        <span className="text-red-600">{user?.custom_workstation}</span> İstasyonu İş Kartları Listesi
-      </h1>
+      {/* <h1 className="scroll-m-20 text-2xl font-extrabold tracking-tight lg:text-3xl">
+        <span className="text-red-600">{currentOperation}</span> İş Kartları Listesi
+      </h1> */}
+      <Navbar 
+      currentWorkstation={currentWorkstation}
+      setCurrentWorkstation={setCurrentWorkstation}
+      currentOperation={currentOperation}
+      setCurrentOperation={setCurrentOperation}
+      currentUser={currentUser}
+      operations={user?.custom_operations}
+      // workstations={workstations}
+      />
       <button
               onClick={
                 logout
@@ -173,18 +192,49 @@ export const JobCards = () => {
             İş Kartı Noyu tarat
           </label>
         </div>
-        <Pagination
+        {/* <div className="flex gap-2 items-center">
+    <label htmlFor="workstations">Operasyon Seç:</label>
+    <select className="p-2 rounded-md bg-transparent border-2" id="workstations" name="workstations" value={currentOperation} onChange={(event) => {
+    setCurrentOperation(event.target.value);
+    localStorage.setItem('currentOperation', event.target.value);
+
+  }} >
+        {
+          user?.custom_operations?.map((item)=>(
+            <option key={item.name} value={item.operations}>{item.operations}</option>
+          ))
+        }
+
+    </select>
+    </div> */}
+        <div className="flex gap-2 items-center">
+    <label htmlFor="workstations">İstasyon Seç:</label>
+    <select className="p-2 rounded-md bg-transparent border-2" id="workstations" name="workstations" value={currentWorkstation} onChange={(event) => {
+    setCurrentWorkstation(event.target.value);
+
+  }} >
+        {
+  [...new Set(jobCards?.map(item => item.workstation))].map((workstation) => (
+    <option key={workstation} value={workstation}>
+      {workstation}
+    </option>
+  ))
+}
+
+    </select>
+    </div>
+        {/* <Pagination
           doctype="Job Card"
           pageLimitStart={pageLimitStart}
           setPageLimitStart={setPageLimitStart}
-        />
+        /> */}
       </div>
 
       <Table>
         {/*<TableCaption>A list of your projects.</TableCaption>*/}
         <TableHeader>
           <TableRow className="text-left">
-            <TableHead className="w-[100px]">İş Katrı No</TableHead>
+            <TableHead >İş Katrı No</TableHead>
             <TableHead>BOM No</TableHead>
             <TableHead>Ürün Adı</TableHead>
             <TableHead>İstasyon</TableHead>

@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Modal from "../../components/Modal";
 import CompletedModal from "../../components/CompletedModal";
 import { toast } from "react-toastify";
@@ -16,6 +16,7 @@ import { toast } from "react-toastify";
 const JobCardDetail = () => {
   const { id } = useParams(); // URL'den id al
   const { data: jobCard, error } = useFrappeGetDoc("Job Card", id, "jobcarddetails");
+  const { data: workOrder, error2 } = useFrappeGetDoc("Work Order", jobCard?.work_order , "workorder");
   const { data: employees } = useFrappeGetDocList('Employee', {
     fields: ['*'],  // Tüm alanları almak için ["*"] kullanıyoruz
   });
@@ -25,10 +26,32 @@ const JobCardDetail = () => {
   const [selectedReason, setSelectedReason] = useState("");
   const [totalCount, setTotalCount] = useState()
   const [prevOpt, setPrevOpt] = useState()
+  const [required_items, setRequired_items] = useState()
   const { mutate } = useSWRConfig();
   const navigate = useNavigate()
   const {logout}=useFrappeAuth()
+  
+// console.log(workOrder?.required_items.filter((item)=>item.operation===localStorage.getItem('currentOperation')))
+// let filters = [
+//   ["required_items.operations", "=", localStorage.getItem('currentOperation')]
+//   ["id", "=", jobCard.work_order]
+// ];
 
+  // Operasyondaki Malzemeleri AL
+  const getRawMaterials = async () => {
+   
+    try {
+      const items =await workOrder?.required_items.filter((item)=>item.operation===localStorage.getItem('currentOperation'))
+      setRequired_items(items)
+      console.log("items",items)
+    } catch (error) {
+      console.error("Job Cards Fetch Error:", error);
+    }
+  };
+  useEffect(() => {
+    getRawMaterials()
+  }, [jobCard])
+  
 
   if (error) return <div>Error loading job card details</div>;
   if (!jobCard) return <div>Loading...</div>;

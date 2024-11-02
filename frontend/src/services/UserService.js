@@ -16,7 +16,7 @@ export const fetchCurrentUser = async () => {
         }
 
         const data = await response.json();
-        console.log(data); // Kullanıcı bilgilerini konsola yazdır
+        // console.log(data); // Kullanıcı bilgilerini konsola yazdır
         return data.message; // Kullanıcı bilgilerini döndür
     } catch (error) {
         console.error("Hata:", error);

@@ -1,10 +1,13 @@
-import './App.css'
+// import './App.css'
 import { FrappeProvider } from 'frappe-react-sdk'
 
 import { Outlet } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Header from './components/Header';
+import { PrimeReactProvider } from 'primereact/api';
+import Tailwind from "primereact/passthrough/tailwind";
+
 
 function App() {
 
@@ -22,9 +25,11 @@ function App() {
 				}}
 			>
 {/* <Header/> */}
+<PrimeReactProvider >
 				<Outlet />
 				<ToastContainer 
 				position="top-center"/>
+				</PrimeReactProvider>
 			</FrappeProvider>
 		</div>
 	)
